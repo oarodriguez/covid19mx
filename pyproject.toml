@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "pyproject"
+name = "covid19mx"
 version = "23.3.1.dev0"
-description = "A template for your Python project. It uses Poetry as a dependency manager and Apache 2.0 as its license."
+description = "A project to analyze the evolution of the COVID-19 pandemic in Mexico."
 license = "Apache-2.0"
 authors = [
   "Omar Abel Rodríguez-López <oarodriguez.mx@gmail.com>"
 ]
 readme = "README.md"
-homepage = "https://github.com/oarodriguez/python-project"
-repository = "https://github.com/oarodriguez/python-project"
+homepage = "https://github.com/oarodriguez/covid19mx"
+repository = "https://github.com/oarodriguez/covid19mx"
 classifiers = [
   "Development Status :: 1 - Planning",
   "Intended Audience :: Developers",
@@ -24,7 +24,6 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Scientific/Engineering",
-  "Topic :: Scientific/Engineering :: Physics",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development",
   "Topic :: Software Development :: Libraries",
@@ -32,7 +31,7 @@ classifiers = [
 ]
 
 packages = [
-  { include = "pyproject", from = "src" }
+  { include = "covid19mx", from = "src" }
 ]
 
 [tool.poetry.dependencies]
@@ -95,7 +94,7 @@ source = ["src"]
 [tool.coverage.run]
 parallel = true
 branch = true
-source = ["pyproject"]
+source = ["covid19mx"]
 
 [tool.coverage.report]
 show_missing = true

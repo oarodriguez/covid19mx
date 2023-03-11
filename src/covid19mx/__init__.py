@@ -1,11 +1,11 @@
-"""pyproject - A template for your Python project.
+"""covid19mx - A template for your Python project.
 
-Copyright © 2021, Omar Abel Rodríguez-López.
+Copyright © 2023, Omar Abel Rodríguez-López.
 """
 
 import importlib.metadata as importlib_metadata
 
-metadata = importlib_metadata.metadata("pyproject")
+metadata = importlib_metadata.metadata("covid19mx")
 
 # Export package information.
 __version__ = metadata["version"]

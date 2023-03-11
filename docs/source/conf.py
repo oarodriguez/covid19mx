@@ -1,5 +1,8 @@
 """Configuration file for the Sphinx documentation builder."""
-#
+from __future__ import annotations
+
+import covid19mx
+
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
@@ -13,16 +16,15 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-import pyproject
 
 # -- Project information -----------------------------------------------------
 
-project = pyproject.metadata["name"]
-copyright = f"2021, {pyproject.__author__}"
-author = f"{pyproject.__author__}"
+project = covid19mx.metadata["name"]
+copyright = f"2021, {covid19mx.__author__}"
+author = f"{covid19mx.__author__}"
 
 # The full version, including alpha/beta/rc tags
-release = pyproject.__version__
+release = covid19mx.__version__
 
 # -- General configuration ---------------------------------------------------
 
@@ -37,7 +39,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns: list[str] = []
 
 # -- Options for HTML output -------------------------------------------------
 

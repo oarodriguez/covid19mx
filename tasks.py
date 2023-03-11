@@ -64,9 +64,9 @@ def _get_package_info():
 
 def _get_installed_package_info():
     """Return the name and version of the installed project package."""
-    import pyproject
+    import covid19mx
 
-    return pyproject.metadata["name"], pyproject.__version__
+    return covid19mx.metadata["name"], covid19mx.__version__
 
 
 @app.command()
@@ -143,12 +143,12 @@ def upgrade():
 def version():
     """Show the installed project version."""
     try:
-        import pyproject
+        import covid19mx
 
-        print(f"{pyproject.metadata['name']} {pyproject.__version__}")
+        print(f"{covid19mx.metadata['name']} {covid19mx.__version__}")
     except ModuleNotFoundError:
         raise click.ClickException(
-            "The package 'pyproject' has not been installed."
+            "The package 'covid19mx' has not been installed."
         )
 
 
