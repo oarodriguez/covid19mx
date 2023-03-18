@@ -10,7 +10,7 @@ from covid19mx.config import (
     DATA_DICTIONARY_FILENAME,
     DATA_DICTIONARY_URL,
 )
-from covid19mx.downloader import Downloader
+from covid19mx.extraction import Downloader
 
 ARE_WE_USING_MOCK_DATA = True
 
