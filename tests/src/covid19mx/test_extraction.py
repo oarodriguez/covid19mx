@@ -10,7 +10,7 @@ from covid19mx.config import (
     DATA_DICTIONARY_FILENAME,
     DATA_DICTIONARY_URL,
 )
-from covid19mx.extraction import Downloader
+from covid19mx.extraction import DataDictionaryDownloader, DataDownloader
 
 ARE_WE_USING_MOCK_DATA = True
 
@@ -30,9 +30,15 @@ MOCK_DATA_DICTIONARY_DOWNLOAD_PATH = (
 
 
 @pytest.fixture(scope="module")
-def downloader():
-    """Return a new `Downloader` instance."""
-    return Downloader(COVID_DATA_URL, DATA_DICTIONARY_URL)
+def data_downloader():
+    """Return a new `DataDownloader` instance."""
+    return DataDownloader(COVID_DATA_URL)
+
+
+@pytest.fixture(scope="module")
+def dictionary_data_downloader():
+    """Return a new `DictionaryDataDownloader` instance."""
+    return DataDictionaryDownloader(DATA_DICTIONARY_URL)
 
 
 @pytest.mark.skipif(
@@ -40,7 +46,7 @@ def downloader():
     reason="This routine downloads a huge data file right now. We have to "
     "set mock data before enabling it.",
 )
-def test_download_covid_data(downloader: Downloader):
+def test_download_covid_data(data_downloader: DataDownloader):
     """Test the routineS used to download the COVID data."""
     mock_headers = {
         "Content-Length": f"{MOCK_COVID_DATA_SIZE}",
@@ -63,7 +69,7 @@ def test_download_covid_data(downloader: Downloader):
             body=file_contents,
         )
 
-        for chunk_info in downloader.download_covid_data(
+        for chunk_info in data_downloader.download(
             MOCK_COVID_DATA_DOWNLOAD_PATH
         ):
             downloaded_size += chunk_info.chunk_size
@@ -77,7 +83,9 @@ def test_download_covid_data(downloader: Downloader):
     reason="This routine downloads a huge data file right now. We have to "
     "set mock data before enabling it.",
 )
-def test_download_data_dictionaries(downloader: Downloader):
+def test_download_data_dictionaries(
+    dictionary_data_downloader: DataDictionaryDownloader,
+):
     """Test the routine used to download the COVID dictionary data."""
     mock_headers = {
         "Content-Length": f"{MOCK_DATA_DICTIONARY_SIZE}",
@@ -93,7 +101,7 @@ def test_download_data_dictionaries(downloader: Downloader):
             headers=mock_headers,
             body=file_contents,
         )
-        downloader.download_data_dictionary(MOCK_DATA_DICTIONARY_DOWNLOAD_PATH)
+        dictionary_data_downloader.download(MOCK_DATA_DICTIONARY_DOWNLOAD_PATH)
 
     assert (
         MOCK_DATA_DICTIONARY_DOWNLOAD_PATH.stat().st_size

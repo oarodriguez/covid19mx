@@ -20,16 +20,13 @@ class DataChunkInfo:
 
 
 @dataclass
-class Downloader:
+class DataDownloader:
     """Download the compressed COVID data and extract it."""
 
-    # Remote URL where the COVID data is located.
-    covid_data_url: str
+    # Remote URL where the data is located.
+    data_url: str
 
-    # Remote URL where the COVID data dictionary is located.
-    data_dictionary_url: str
-
-    def download_covid_data(
+    def download(
         self, path: Path, chunk_size: int = 1024 * 1024
     ) -> Iterable[DataChunkInfo]:
         """Download the COVID data in parts.
@@ -37,10 +34,10 @@ class Downloader:
         :param path: Path we use to save the downloaded data in the filesystem.
         :param chunk_size: The size in bytes of each data part.
         """
-        response = requests.head(url=self.covid_data_url)
+        response = requests.head(url=self.data_url)
         response.raise_for_status()
         content_size = int(response.headers.get("Content-Length", "0"))
-        with requests.get(url=self.covid_data_url, stream=True) as response:
+        with requests.get(url=self.data_url, stream=True) as response:
             response.raise_for_status()
             path.parent.mkdir(exist_ok=True, parents=True)
             with path.open("wb") as file:
@@ -54,7 +51,15 @@ class Downloader:
                         file_size=content_size,
                     )
 
-    def download_data_dictionary(self, path: Path):
+
+@dataclass
+class DataDictionaryDownloader:
+    """Download the compressed COVID dictionary data and extract it."""
+
+    # Remote URL where the data is located.
+    data_url: str
+
+    def download(self, path: Path):
         """Download the COVID data dictionaries.
 
         :param path: Path we use to save the dictionary data in the filesystem.
@@ -62,4 +67,4 @@ class Downloader:
         print("Downloading dictionary data...")
         path.parent.mkdir(exist_ok=True, parents=True)
         with path.open("wb") as file:
-            file.write(requests.get(url=self.data_dictionary_url).content)
+            file.write(requests.get(url=self.data_url).content)
