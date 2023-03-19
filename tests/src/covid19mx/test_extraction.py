@@ -101,7 +101,7 @@ def test_data_extractor(
     """Test the routine used to download the COVID dictionary data."""
     for _ in data_downloader.download():
         continue
-    data_downloader.extractor.extract(data_config.temp_base_path)
+    data_downloader.extract(data_config.temp_base_path)
 
 
 def test_data_dictionary_extractor(
@@ -110,6 +110,4 @@ def test_data_dictionary_extractor(
 ):
     """Test the routine used to download the COVID dictionary data."""
     data_dictionary_downloader.download()
-    data_dictionary_downloader.extractor.extract(
-        data_dictionary_config.temp_base_path
-    )
+    data_dictionary_downloader.extract(data_dictionary_config.temp_base_path)

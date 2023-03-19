@@ -6,7 +6,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import requests
-from attr import dataclass
+from attr import dataclass, field
 
 
 @dataclass
@@ -14,20 +14,30 @@ class DataExtractor:
     """Uncompress the data file contents."""
 
     # Path to the compressed dictionaries and catalogs.
-    path: Path
+    source_file: Path
 
-    def extract(self, path: Path) -> Path:
-        """Extract the compresses contents to the given path.
+    # The output directory path of the uncompressed files.
+    destination_path: Path
 
-        :param path: The output path.
+    # The extracted file path.
+    file_path: Path = field(default=None, init=False)
+
+    def extract(self) -> DataExtractor:
+        """Extract the compresses contents.
+
+        Also, update the internal file_path attribute, so it point to the
+        location of the extracted contents.
+
+        :return: The current extractor instance.
         """
-        path.mkdir(parents=True, exist_ok=True)
-        with ZipFile(self.path) as zip_file:
+        self.destination_path.mkdir(parents=True, exist_ok=True)
+        with ZipFile(self.source_file) as zip_file:
             for file_name in zip_file.namelist():
                 if "COVID19MEXICO.csv" in file_name:
-                    zip_file.extract(file_name, path)
-                    file_path = path / file_name
-                    return file_path
+                    zip_file.extract(file_name, self.destination_path)
+                    file_path = self.destination_path / file_name
+                    self.file_path = file_path
+                    return self
         raise ValueError(
             "The compressed file does not contain any COVID data."
         )
@@ -38,25 +48,35 @@ class DataDictionaryExtractor:
     """Uncompress the data dictionary file contents."""
 
     # Path to the compressed dictionaries and catalogs.
-    path: Path
+    source_file: Path
 
-    def extract(self, path: Path) -> list[Path]:
-        """Extract the compresses contents to the given path.
+    # The output directory path of the uncompressed files.
+    destination_path: Path
 
-        :param path: The output path.
+    # The extracted file path.
+    file_paths: list[Path] = field(default=None, init=False)
+
+    def extract(self) -> DataDictionaryExtractor:
+        """Extract the compresses contents.
+
+        Also, update the internal file_paths attribute, so it contains the
+        locations of the extracted contents.
+
+        :return: The current extractor instance.
         """
-        path.mkdir(parents=True, exist_ok=True)
-        with ZipFile(self.path) as zip_file:
+        self.destination_path.mkdir(parents=True, exist_ok=True)
+        with ZipFile(self.source_file) as zip_file:
             file_paths = []
             for file_name in zip_file.namelist():
                 if "Catalogos" in file_name or "Descriptores" in file_name:
-                    zip_file.extract(file_name, path)
-                    file_paths.append(path / file_name)
+                    zip_file.extract(file_name, self.destination_path)
+                    file_paths.append(self.destination_path / file_name)
         if not file_paths:
             raise ValueError(
                 "The compressed file does not contain any COVID data."
             )
-        return file_paths
+        self.file_paths = file_paths
+        return self
 
 
 @dataclass
@@ -80,10 +100,9 @@ class DataDownloader:
     # Path we use to save the downloaded data in the filesystem.
     download_path: Path
 
-    @property
-    def extractor(self) -> DataExtractor:
+    def extract(self, destination_path: Path) -> DataExtractor:
         """Extractor instance used to uncompress the data contents."""
-        return DataExtractor(self.download_path)
+        return DataExtractor(self.download_path, destination_path).extract()
 
     def download(
         self, chunk_size: int = 1024 * 1024
@@ -120,10 +139,11 @@ class DataDictionaryDownloader:
     # Path we use to save the downloaded data in the filesystem.
     download_path: Path
 
-    @property
-    def extractor(self) -> DataDictionaryExtractor:
+    def extract(self, destination_path: Path) -> DataDictionaryExtractor:
         """Extractor instance used to uncompress the data contents."""
-        return DataDictionaryExtractor(self.download_path)
+        return DataDictionaryExtractor(
+            self.download_path, destination_path
+        ).extract()
 
     def download(self):
         """Download the COVID data dictionaries."""
