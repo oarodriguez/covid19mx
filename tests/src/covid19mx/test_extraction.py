@@ -15,7 +15,7 @@ def data_downloader(data_config: DataConfig):
 
 
 @pytest.fixture(scope="module")
-def dictionary_data_downloader(data_dictionary_config: DataConfig):
+def data_dictionary_downloader(data_dictionary_config: DataConfig):
     """Return a new `DictionaryDataDownloader` instance."""
     return DataDictionaryDownloader(data_dictionary_config.data_url)
 
@@ -64,7 +64,7 @@ def test_download_covid_data(
     "set mock data before enabling it.",
 )
 def test_download_data_dictionaries(
-    dictionary_data_downloader: DataDictionaryDownloader,
+    data_dictionary_downloader: DataDictionaryDownloader,
     data_dictionary_config: DataConfig,
 ):
     """Test the routine used to download the COVID dictionary data."""
@@ -83,7 +83,7 @@ def test_download_data_dictionaries(
             headers=mock_headers,
             body=file_contents,
         )
-        dictionary_data_downloader.download(
+        data_dictionary_downloader.download(
             data_dictionary_config.temp_data_path
         )
 
