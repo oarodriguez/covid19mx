@@ -1,44 +1,23 @@
 """Test the downloader module routines."""
-from pathlib import Path
-
 import pytest
 import responses
+from tests.src.covid19mx.conftest import DataConfig
 
-from covid19mx.config import (
-    COVID_DATA_FILENAME,
-    COVID_DATA_URL,
-    DATA_DICTIONARY_FILENAME,
-    DATA_DICTIONARY_URL,
-)
 from covid19mx.extraction import DataDictionaryDownloader, DataDownloader
 
 ARE_WE_USING_MOCK_DATA = True
 
-MOCK_DATA_PATH = Path(__file__).parent.parent.parent / "data"
-MOCK_COVID_DATA_PATH = MOCK_DATA_PATH / COVID_DATA_FILENAME
-MOCK_DATA_DICTIONARY_PATH = MOCK_DATA_PATH / DATA_DICTIONARY_FILENAME
-
-MOCK_COVID_DATA_SIZE = MOCK_COVID_DATA_PATH.stat().st_size
-MOCK_DATA_DICTIONARY_SIZE = MOCK_DATA_DICTIONARY_PATH.stat().st_size
-
-MOCK_COVID_DATA_DOWNLOAD_PATH = (
-    MOCK_DATA_PATH / "downloads" / COVID_DATA_FILENAME
-)
-MOCK_DATA_DICTIONARY_DOWNLOAD_PATH = (
-    MOCK_DATA_PATH / "downloads" / DATA_DICTIONARY_FILENAME
-)
-
 
 @pytest.fixture(scope="module")
-def data_downloader():
+def data_downloader(data_config: DataConfig):
     """Return a new `DataDownloader` instance."""
-    return DataDownloader(COVID_DATA_URL)
+    return DataDownloader(data_config.data_url)
 
 
 @pytest.fixture(scope="module")
-def dictionary_data_downloader():
+def dictionary_data_downloader(data_dictionary_config: DataConfig):
     """Return a new `DictionaryDataDownloader` instance."""
-    return DataDictionaryDownloader(DATA_DICTIONARY_URL)
+    return DataDictionaryDownloader(data_dictionary_config.data_url)
 
 
 @pytest.mark.skipif(
@@ -46,10 +25,13 @@ def dictionary_data_downloader():
     reason="This routine downloads a huge data file right now. We have to "
     "set mock data before enabling it.",
 )
-def test_download_covid_data(data_downloader: DataDownloader):
+def test_download_covid_data(
+    data_downloader: DataDownloader, data_config: DataConfig
+):
     """Test the routineS used to download the COVID data."""
+    data_size = data_config.data_path.stat().st_size
     mock_headers = {
-        "Content-Length": f"{MOCK_COVID_DATA_SIZE}",
+        "Content-Length": f"{data_size}",
         "Accept-Ranges": "bytes",
         "Content-Type": "application/x-zip-compressed",
     }
@@ -57,25 +39,23 @@ def test_download_covid_data(data_downloader: DataDownloader):
     with responses.RequestsMock() as requests_mock:
         requests_mock.add(
             method="HEAD",
-            url=COVID_DATA_URL,
+            url=data_downloader.data_url,
             headers=mock_headers,
         )
-        with MOCK_COVID_DATA_PATH.open("rb") as file:
+        with data_config.data_path.open("rb") as file:
             file_contents = file.read()
         requests_mock.add(
             method="GET",
-            url=COVID_DATA_URL,
+            url=data_downloader.data_url,
             headers=mock_headers,
             body=file_contents,
         )
 
-        for chunk_info in data_downloader.download(
-            MOCK_COVID_DATA_DOWNLOAD_PATH
-        ):
+        for chunk_info in data_downloader.download(data_config.temp_data_path):
             downloaded_size += chunk_info.chunk_size
 
-    assert MOCK_COVID_DATA_DOWNLOAD_PATH.stat().st_size == downloaded_size
-    assert MOCK_COVID_DATA_DOWNLOAD_PATH.stat().st_size == MOCK_COVID_DATA_SIZE
+    assert data_config.temp_data_path.stat().st_size == downloaded_size
+    assert data_config.temp_data_path.stat().st_size == data_size
 
 
 @pytest.mark.skipif(
@@ -85,25 +65,26 @@ def test_download_covid_data(data_downloader: DataDownloader):
 )
 def test_download_data_dictionaries(
     dictionary_data_downloader: DataDictionaryDownloader,
+    data_dictionary_config: DataConfig,
 ):
     """Test the routine used to download the COVID dictionary data."""
+    data_size = data_dictionary_config.data_path.stat().st_size
     mock_headers = {
-        "Content-Length": f"{MOCK_DATA_DICTIONARY_SIZE}",
+        "Content-Length": f"{data_size}",
         "Accept-Ranges": "bytes",
         "Content-Type": "application/x-zip-compressed",
     }
     with responses.RequestsMock() as requests_mock:
-        with MOCK_DATA_DICTIONARY_PATH.open("rb") as file:
+        with data_dictionary_config.data_path.open("rb") as file:
             file_contents = file.read()
         requests_mock.add(
             method="GET",
-            url=DATA_DICTIONARY_URL,
+            url=data_dictionary_config.data_url,
             headers=mock_headers,
             body=file_contents,
         )
-        dictionary_data_downloader.download(MOCK_DATA_DICTIONARY_DOWNLOAD_PATH)
+        dictionary_data_downloader.download(
+            data_dictionary_config.temp_data_path
+        )
 
-    assert (
-        MOCK_DATA_DICTIONARY_DOWNLOAD_PATH.stat().st_size
-        == MOCK_DATA_DICTIONARY_SIZE
-    )
+    assert data_dictionary_config.temp_data_path.stat().st_size == data_size
