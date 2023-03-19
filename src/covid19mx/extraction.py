@@ -98,11 +98,11 @@ class DataDownloader:
     data_url: str
 
     # Path we use to save the downloaded data in the filesystem.
-    download_path: Path
+    destination_file: Path
 
     def extract(self, destination_path: Path) -> DataExtractor:
         """Extractor instance used to uncompress the data contents."""
-        return DataExtractor(self.download_path, destination_path).extract()
+        return DataExtractor(self.destination_file, destination_path).extract()
 
     def download(
         self, chunk_size: int = 1024 * 1024
@@ -116,8 +116,8 @@ class DataDownloader:
         content_size = int(response.headers.get("Content-Length", "0"))
         with requests.get(url=self.data_url, stream=True) as response:
             response.raise_for_status()
-            self.download_path.parent.mkdir(exist_ok=True, parents=True)
-            with self.download_path.open("wb") as file:
+            self.destination_file.parent.mkdir(exist_ok=True, parents=True)
+            with self.destination_file.open("wb") as file:
                 chunk_content: bytes
                 for chunk_index, chunk_content in enumerate(
                     response.iter_content(chunk_size)
@@ -137,17 +137,17 @@ class DataDictionaryDownloader:
     data_url: str
 
     # Path we use to save the downloaded data in the filesystem.
-    download_path: Path
+    destination_file: Path
 
     def extract(self, destination_path: Path) -> DataDictionaryExtractor:
         """Extractor instance used to uncompress the data contents."""
         return DataDictionaryExtractor(
-            self.download_path, destination_path
+            self.destination_file, destination_path
         ).extract()
 
     def download(self):
         """Download the COVID data dictionaries."""
         print("Downloading dictionary data...")
-        self.download_path.parent.mkdir(exist_ok=True, parents=True)
-        with self.download_path.open("wb") as file:
+        self.destination_file.parent.mkdir(exist_ok=True, parents=True)
+        with self.destination_file.open("wb") as file:
             file.write(requests.get(url=self.data_url).content)

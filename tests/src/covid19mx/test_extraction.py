@@ -9,7 +9,7 @@ from .conftest import DataConfig
 ARE_WE_USING_MOCK_DATA = True
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def data_downloader(data_config: DataConfig):
     """Return a new `DataDownloader` instance."""
     data_size = data_config.data_path.stat().st_size
@@ -37,7 +37,7 @@ def data_downloader(data_config: DataConfig):
         yield DataDownloader(data_config.data_url, data_config.temp_data_path)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def data_dictionary_downloader(data_dictionary_config: DataConfig):
     """Return a new `DictionaryDataDownloader` instance."""
     data_size = data_dictionary_config.data_path.stat().st_size
