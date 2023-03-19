@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import responses
 
-from covid19mx.extraction import SourceDataHandler, SourceDataHandlerConfig
+from covid19mx.sources import SourceDataHandler, SourceDataHandlerConfig
 
 ARE_WE_USING_MOCK_DATA = True
 

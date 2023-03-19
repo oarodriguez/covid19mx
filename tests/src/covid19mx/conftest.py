@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from attr import evolve
 
-from covid19mx.extraction import SourceDataHandlerConfig
+from covid19mx.sources import SourceDataHandlerConfig
 
 # Location of our mock data files.
 MOCK_DATA_PATH = Path(__file__).parent.parent.parent / "data"
