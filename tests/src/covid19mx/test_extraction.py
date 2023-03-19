@@ -1,64 +1,65 @@
 """Test the downloader module routines."""
+from pathlib import Path
+
 import pytest
 import responses
 
-from covid19mx.extraction import DataDictionaryDownloader, DataDownloader
-
-from .conftest import DataConfig
+from covid19mx.extraction import SourceDataHandler, SourceDataHandlerConfig
 
 ARE_WE_USING_MOCK_DATA = True
 
 
 @pytest.fixture()
-def data_downloader(data_config: DataConfig):
-    """Return a new `DataDownloader` instance."""
-    data_size = data_config.data_path.stat().st_size
-    mock_headers = {
-        "Content-Length": f"{data_size}",
-        "Accept-Ranges": "bytes",
-        "Content-Type": "application/x-zip-compressed",
-    }
+def data_handler(source_data_config: SourceDataHandlerConfig, tmp_path: Path):
+    """Mock a few HTTP responses than affect a new data handler instance."""
     with responses.RequestsMock(
         assert_all_requests_are_fired=False
     ) as requests_mock:
+        # Set mock responses affecting how we download the mock COVID data
+        # zipped file.
+        mock_data_zipped_file = (
+            source_data_config.data_path
+            / source_data_config.covid_data_zipped_filename
+        )
+        mock_headers = {
+            "Content-Length": f"{mock_data_zipped_file.stat().st_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Type": "application/x-zip-compressed",
+        }
         requests_mock.add(
             method="HEAD",
-            url=data_config.data_url,
+            url=source_data_config.covid_data_url,
             headers=mock_headers,
         )
-        with data_config.data_path.open("rb") as file:
+        with mock_data_zipped_file.open("rb") as file:
             file_contents = file.read()
         requests_mock.add(
             method="GET",
-            url=data_config.data_url,
+            url=source_data_config.covid_data_url,
             headers=mock_headers,
             body=file_contents,
         )
-        yield DataDownloader(data_config.data_url, data_config.temp_data_path)
 
-
-@pytest.fixture()
-def data_dictionary_downloader(data_dictionary_config: DataConfig):
-    """Return a new `DictionaryDataDownloader` instance."""
-    data_size = data_dictionary_config.data_path.stat().st_size
-    mock_headers = {
-        "Content-Length": f"{data_size}",
-        "Accept-Ranges": "bytes",
-        "Content-Type": "application/x-zip-compressed",
-    }
-    with responses.RequestsMock() as requests_mock:
-        with data_dictionary_config.data_path.open("rb") as file:
+        # Set mock responses affecting how we download the mock data
+        # dictionary zipped file.
+        mock_data_zipped_file = (
+            source_data_config.data_path
+            / source_data_config.data_dictionary_zipped_filename
+        )
+        mock_headers = {
+            "Content-Length": f"{mock_data_zipped_file.stat().st_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Type": "application/x-zip-compressed",
+        }
+        with mock_data_zipped_file.open("rb") as file:
             file_contents = file.read()
         requests_mock.add(
             method="GET",
-            url=data_dictionary_config.data_url,
+            url=source_data_config.data_dictionary_url,
             headers=mock_headers,
             body=file_contents,
         )
-        yield DataDictionaryDownloader(
-            data_dictionary_config.data_url,
-            data_dictionary_config.temp_data_path,
-        )
+        yield SourceDataHandler(source_data_config, temp_data_path=tmp_path)
 
 
 @pytest.mark.skipif(
@@ -66,48 +67,50 @@ def data_dictionary_downloader(data_dictionary_config: DataConfig):
     reason="This routine downloads a huge data file right now. We have to "
     "set mock data before enabling it.",
 )
-def test_download_covid_data(
-    data_downloader: DataDownloader, data_config: DataConfig
+def test_download_data(
+    data_handler: SourceDataHandler,
+    source_data_config: SourceDataHandlerConfig,
 ):
-    """Test the routineS used to download the COVID data."""
+    """Test the routines used to download all the COVID-related data."""
+    # Download the COVID data and compare the downloaded file size
+    # against the mock COVID data file.
     downloaded_size = 0
-    for chunk_info in data_downloader.download():
+    for chunk_info in data_handler.download_covid_data_chunks():
         downloaded_size += chunk_info.chunk_size
+    mock_covid_data_zipped_file = (
+        source_data_config.data_path
+        / source_data_config.covid_data_zipped_filename
+    )
+    # Check that the chunks yield the correct size information.
+    assert (
+        data_handler.covid_data_zipped_file.stat().st_size == downloaded_size
+    )
+    assert (
+        data_handler.covid_data_zipped_file.stat().st_size
+        == mock_covid_data_zipped_file.stat().st_size
+    )
 
-    data_size = data_config.data_path.stat().st_size
-    assert data_config.temp_data_path.stat().st_size == downloaded_size
-    assert data_config.temp_data_path.stat().st_size == data_size
+    # Download the data dictionary and compare the downloaded file size
+    # against the mock dictionary data file.
+    data_handler.download_data_dictionary()
+    mock_covid_data_dictionary_zipped_file = (
+        source_data_config.data_path
+        / source_data_config.data_dictionary_zipped_filename
+    )
+    assert (
+        data_handler.data_dictionary_zipped_file.stat().st_size
+        == mock_covid_data_dictionary_zipped_file.stat().st_size
+    )
 
 
-@pytest.mark.skipif(
-    condition=not ARE_WE_USING_MOCK_DATA,
-    reason="This routine downloads a huge data file right now. We have to "
-    "set mock data before enabling it.",
-)
-def test_download_data_dictionaries(
-    data_dictionary_downloader: DataDictionaryDownloader,
-    data_dictionary_config: DataConfig,
+def test_data_extraction(
+    data_handler: SourceDataHandler,
+    source_data_config: SourceDataHandlerConfig,
 ):
-    """Test the routine used to download the COVID dictionary data."""
-    data_dictionary_downloader.download()
-    data_size = data_dictionary_config.data_path.stat().st_size
-    assert data_dictionary_config.temp_data_path.stat().st_size == data_size
-
-
-def test_data_extractor(
-    data_downloader: DataDownloader,
-    data_config: DataConfig,
-):
-    """Test the routine used to download the COVID dictionary data."""
-    for _ in data_downloader.download():
+    """Test the routines used to extract all the COVID-related data."""
+    for _ in data_handler.download_covid_data_chunks():
         continue
-    data_downloader.extract(data_config.temp_base_path)
+    data_handler.extract_covid_data()
 
-
-def test_data_dictionary_extractor(
-    data_dictionary_downloader: DataDictionaryDownloader,
-    data_dictionary_config: DataConfig,
-):
-    """Test the routine used to download the COVID dictionary data."""
-    data_dictionary_downloader.download()
-    data_dictionary_downloader.extract(data_dictionary_config.temp_base_path)
+    data_handler.download_data_dictionary()
+    data_handler.extract_dictionary_data()
