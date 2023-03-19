@@ -18,7 +18,9 @@ def data_downloader(data_config: DataConfig):
         "Accept-Ranges": "bytes",
         "Content-Type": "application/x-zip-compressed",
     }
-    with responses.RequestsMock() as requests_mock:
+    with responses.RequestsMock(
+        assert_all_requests_are_fired=False
+    ) as requests_mock:
         requests_mock.add(
             method="HEAD",
             url=data_config.data_url,
@@ -32,7 +34,7 @@ def data_downloader(data_config: DataConfig):
             headers=mock_headers,
             body=file_contents,
         )
-        yield DataDownloader(data_config.data_url)
+        yield DataDownloader(data_config.data_url, data_config.temp_data_path)
 
 
 @pytest.fixture(scope="module")
@@ -53,7 +55,10 @@ def data_dictionary_downloader(data_dictionary_config: DataConfig):
             headers=mock_headers,
             body=file_contents,
         )
-        yield DataDictionaryDownloader(data_dictionary_config.data_url)
+        yield DataDictionaryDownloader(
+            data_dictionary_config.data_url,
+            data_dictionary_config.temp_data_path,
+        )
 
 
 @pytest.mark.skipif(
@@ -66,7 +71,7 @@ def test_download_covid_data(
 ):
     """Test the routineS used to download the COVID data."""
     downloaded_size = 0
-    for chunk_info in data_downloader.download(data_config.temp_data_path):
+    for chunk_info in data_downloader.download():
         downloaded_size += chunk_info.chunk_size
 
     data_size = data_config.data_path.stat().st_size
@@ -84,6 +89,27 @@ def test_download_data_dictionaries(
     data_dictionary_config: DataConfig,
 ):
     """Test the routine used to download the COVID dictionary data."""
-    data_dictionary_downloader.download(data_dictionary_config.temp_data_path)
+    data_dictionary_downloader.download()
     data_size = data_dictionary_config.data_path.stat().st_size
     assert data_dictionary_config.temp_data_path.stat().st_size == data_size
+
+
+def test_data_extractor(
+    data_downloader: DataDownloader,
+    data_config: DataConfig,
+):
+    """Test the routine used to download the COVID dictionary data."""
+    for _ in data_downloader.download():
+        continue
+    data_downloader.extractor.extract(data_config.temp_base_path)
+
+
+def test_data_dictionary_extractor(
+    data_dictionary_downloader: DataDictionaryDownloader,
+    data_dictionary_config: DataConfig,
+):
+    """Test the routine used to download the COVID dictionary data."""
+    data_dictionary_downloader.download()
+    data_dictionary_downloader.extractor.extract(
+        data_dictionary_config.temp_base_path
+    )
