@@ -11,19 +11,19 @@ PROJECT_PATH = Path(__file__).parent.parent.parent
 ROOT_DATA_SOURCE_URL = (
     "https://datosabiertos.salud.gob.mx/gobmx/salud/datos_abiertos"
 )
-COVID_DATA_ZIPPED_FILENAME = "datos_abiertos_covid19.zip"
-DATA_DICTIONARY_ZIPPED_FILENAME = "diccionario_datos_covid19.zip"
+ZIPPED_COVID_DATA_FILENAME = "datos_abiertos_covid19.zip"
+ZIPPED_DATA_DICTIONARY_FILENAME = "diccionario_datos_covid19.zip"
 
-COVID_DATA_URL = f"{ROOT_DATA_SOURCE_URL}/{COVID_DATA_ZIPPED_FILENAME}"
+COVID_DATA_URL = f"{ROOT_DATA_SOURCE_URL}/{ZIPPED_COVID_DATA_FILENAME}"
 DATA_DICTIONARY_URL = (
-    f"{ROOT_DATA_SOURCE_URL}/{DATA_DICTIONARY_ZIPPED_FILENAME}"
+    f"{ROOT_DATA_SOURCE_URL}/{ZIPPED_DATA_DICTIONARY_FILENAME}"
 )
 
 DATA_DIR_NAME = "data"
 DATA_PATH = PROJECT_PATH / DATA_DIR_NAME
 
-COVID_DATA_FILE = DATA_PATH / COVID_DATA_ZIPPED_FILENAME
-DATA_DICTIONARY_FILE = DATA_PATH / DATA_DICTIONARY_ZIPPED_FILENAME
+COVID_DATA_FILE = DATA_PATH / ZIPPED_COVID_DATA_FILENAME
+DATA_DICTIONARY_FILE = DATA_PATH / ZIPPED_DATA_DICTIONARY_FILENAME
 
 
 @dataclass
@@ -43,10 +43,10 @@ class Config:
     data_dictionary_url: str
 
     # The filename we assign to the downloaded COVID compressed data file.
-    covid_data_zipped_filename: str
+    zipped_covid_data_filename: str
 
     # The filename we assign to the downloaded compressed dictionary data file.
-    data_dictionary_zipped_filename: str
+    zipped_data_dictionary_filename: str
 
     @classmethod
     def default(cls):
@@ -56,6 +56,6 @@ class Config:
             DATA_PATH,
             COVID_DATA_URL,
             DATA_DICTIONARY_URL,
-            COVID_DATA_ZIPPED_FILENAME,
-            DATA_DICTIONARY_ZIPPED_FILENAME,
+            ZIPPED_COVID_DATA_FILENAME,
+            ZIPPED_DATA_DICTIONARY_FILENAME,
         )

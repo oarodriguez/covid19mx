@@ -36,10 +36,10 @@ class SourceDataHandlerConfig:
     data_dictionary_url: str
 
     # The filename we assign to the downloaded COVID compressed data file.
-    covid_data_zipped_filename: str
+    zipped_covid_data_filename: str
 
     # The filename we assign to the downloaded compressed dictionary data file.
-    data_dictionary_zipped_filename: str
+    zipped_data_dictionary_filename: str
 
     @classmethod
     def default(cls):
@@ -49,8 +49,8 @@ class SourceDataHandlerConfig:
             config.data_path,
             config.covid_data_url,
             config.data_dictionary_url,
-            config.covid_data_zipped_filename,
-            config.data_dictionary_zipped_filename,
+            config.zipped_covid_data_filename,
+            config.zipped_data_dictionary_filename,
         )
 
 
@@ -72,15 +72,15 @@ class SourceDataHandler:
     data_dictionary_files: list[Path] = field(default=None, init=False)
 
     @property
-    def covid_data_zipped_file(self):
+    def zipped_covid_data_file(self):
         """Location of the downloaded COVID data compressed file."""
-        return self.temp_data_path / self.config.covid_data_zipped_filename
+        return self.temp_data_path / self.config.zipped_covid_data_filename
 
     @property
-    def data_dictionary_zipped_file(self):
+    def zipped_data_dictionary_file(self):
         """Location of the downloaded COVID data dictionary compressed file."""
         return (
-            self.temp_data_path / self.config.data_dictionary_zipped_filename
+            self.temp_data_path / self.config.zipped_data_dictionary_filename
         )
 
     def download_covid_data_chunks(
@@ -97,10 +97,10 @@ class SourceDataHandler:
             url=self.config.covid_data_url, stream=True
         ) as response:
             response.raise_for_status()
-            self.covid_data_zipped_file.parent.mkdir(
+            self.zipped_covid_data_file.parent.mkdir(
                 exist_ok=True, parents=True
             )
-            with self.covid_data_zipped_file.open("wb") as file:
+            with self.zipped_covid_data_file.open("wb") as file:
                 chunk_content: bytes
                 for chunk_index, chunk_content in enumerate(
                     response.iter_content(chunk_size)
@@ -114,10 +114,10 @@ class SourceDataHandler:
     def download_data_dictionary(self):
         """Download the COVID data dictionaries."""
         print("Downloading dictionary data...")
-        self.data_dictionary_zipped_file.parent.mkdir(
+        self.zipped_data_dictionary_file.parent.mkdir(
             exist_ok=True, parents=True
         )
-        with self.data_dictionary_zipped_file.open("wb") as file:
+        with self.zipped_data_dictionary_file.open("wb") as file:
             file.write(
                 requests.get(url=self.config.data_dictionary_url).content
             )
@@ -130,7 +130,7 @@ class SourceDataHandler:
 
         :return: The current extractor instance.
         """
-        with ZipFile(self.covid_data_zipped_file) as zip_file:
+        with ZipFile(self.zipped_covid_data_file) as zip_file:
             self.temp_data_path.mkdir(parents=True, exist_ok=True)
             for file_name in zip_file.namelist():
                 if "COVID19MEXICO.csv" in file_name:
@@ -149,7 +149,7 @@ class SourceDataHandler:
 
         :return: The current extractor instance.
         """
-        with ZipFile(self.data_dictionary_zipped_file) as zip_file:
+        with ZipFile(self.zipped_data_dictionary_file) as zip_file:
             self.temp_data_path.mkdir(parents=True, exist_ok=True)
             data_dictionary_files = []
             for file_name in zip_file.namelist():

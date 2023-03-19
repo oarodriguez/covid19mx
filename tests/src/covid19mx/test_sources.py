@@ -19,7 +19,7 @@ def data_handler(source_data_config: SourceDataHandlerConfig, tmp_path: Path):
         # zipped file.
         mock_data_zipped_file = (
             source_data_config.data_path
-            / source_data_config.covid_data_zipped_filename
+            / source_data_config.zipped_covid_data_filename
         )
         mock_headers = {
             "Content-Length": f"{mock_data_zipped_file.stat().st_size}",
@@ -44,7 +44,7 @@ def data_handler(source_data_config: SourceDataHandlerConfig, tmp_path: Path):
         # dictionary zipped file.
         mock_data_zipped_file = (
             source_data_config.data_path
-            / source_data_config.data_dictionary_zipped_filename
+            / source_data_config.zipped_data_dictionary_filename
         )
         mock_headers = {
             "Content-Length": f"{mock_data_zipped_file.stat().st_size}",
@@ -79,14 +79,14 @@ def test_download_data(
         downloaded_size += chunk_info.chunk_size
     mock_covid_data_zipped_file = (
         source_data_config.data_path
-        / source_data_config.covid_data_zipped_filename
+        / source_data_config.zipped_covid_data_filename
     )
     # Check that the chunks yield the correct size information.
     assert (
-        data_handler.covid_data_zipped_file.stat().st_size == downloaded_size
+        data_handler.zipped_covid_data_file.stat().st_size == downloaded_size
     )
     assert (
-        data_handler.covid_data_zipped_file.stat().st_size
+        data_handler.zipped_covid_data_file.stat().st_size
         == mock_covid_data_zipped_file.stat().st_size
     )
 
@@ -95,10 +95,10 @@ def test_download_data(
     data_handler.download_data_dictionary()
     mock_covid_data_dictionary_zipped_file = (
         source_data_config.data_path
-        / source_data_config.data_dictionary_zipped_filename
+        / source_data_config.zipped_data_dictionary_filename
     )
     assert (
-        data_handler.data_dictionary_zipped_file.stat().st_size
+        data_handler.zipped_data_dictionary_file.stat().st_size
         == mock_covid_data_dictionary_zipped_file.stat().st_size
     )
 
