@@ -5,10 +5,55 @@ from collections.abc import Iterable
 from pathlib import Path
 from zipfile import ZipFile
 
+import polars
 import requests
 from attr import dataclass, field
+from polars import DataType, Date, Int64, Utf8
 
 from covid19mx.config import Config
+
+SOURCE_COVID_DATA_SCHEMA: dict[str, DataType] = {
+    "FECHA_ACTUALIZACION": Date,
+    "ID_REGISTRO": Utf8,
+    "ORIGEN": Int64,
+    "SECTOR": Int64,
+    "ENTIDAD_UM": Int64,
+    "SEXO": Int64,
+    "ENTIDAD_NAC": Int64,
+    "ENTIDAD_RES": Int64,
+    "MUNICIPIO_RES": Int64,
+    "TIPO_PACIENTE": Int64,
+    "FECHA_INGRESO": Date,
+    "FECHA_SINTOMAS": Date,
+    "FECHA_DEF": Date,
+    "INTUBADO": Int64,
+    "NEUMONIA": Int64,
+    "EDAD": Int64,
+    "NACIONALIDAD": Int64,
+    "EMBARAZO": Int64,
+    "HABLA_LENGUA_INDIG": Int64,
+    "INDIGENA": Int64,
+    "DIABETES": Int64,
+    "EPOC": Int64,
+    "ASMA": Int64,
+    "INMUSUPR": Int64,
+    "HIPERTENSION": Int64,
+    "OTRA_COM": Int64,
+    "CARDIOVASCULAR": Int64,
+    "OBESIDAD": Int64,
+    "RENAL_CRONICA": Int64,
+    "TABAQUISMO": Int64,
+    "OTRO_CASO": Int64,
+    "TOMA_MUESTRA_LAB": Int64,
+    "RESULTADO_LAB": Int64,
+    "TOMA_MUESTRA_ANTIGENO": Int64,
+    "RESULTADO_ANTIGENO": Int64,
+    "CLASIFICACION_FINAL": Int64,
+    "MIGRANTE": Int64,
+    "PAIS_NACIONALIDAD": Utf8,
+    "PAIS_ORIGEN": Utf8,
+    "UCI": Int64,
+}
 
 
 @dataclass
@@ -164,3 +209,14 @@ class SourceDataHandler:
             )
         self.data_dictionary_files = data_dictionary_files
         return self
+
+    def save_covid_data_as_parquet(self):
+        """Save the COVID raw data contents as a Parquet file.
+
+        The output file will appear at the same location with the same name
+        as the extracted file but with a `.parquet` extension.
+        """
+        destination_file = self.covid_data_file.with_suffix(".parquet")
+        polars.scan_csv(
+            self.covid_data_file, dtypes=SOURCE_COVID_DATA_SCHEMA
+        ).sink_parquet(destination_file)

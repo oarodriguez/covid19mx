@@ -1,10 +1,15 @@
 """Test the downloader module routines."""
 from pathlib import Path
 
+import polars
 import pytest
 import responses
 
-from covid19mx.sources import SourceDataHandler, SourceDataHandlerConfig
+from covid19mx.sources import (
+    SOURCE_COVID_DATA_SCHEMA,
+    SourceDataHandler,
+    SourceDataHandlerConfig,
+)
 
 ARE_WE_USING_MOCK_DATA = True
 
@@ -114,3 +119,22 @@ def test_data_extraction(
 
     data_handler.download_data_dictionary()
     data_handler.extract_dictionary_data()
+
+
+def test_save_to_parquet(
+    data_handler: SourceDataHandler,
+    source_data_config: SourceDataHandlerConfig,
+):
+    """Check we correctly save the COVID data as a Parquet file."""
+    for _ in data_handler.download_covid_data_chunks():
+        continue
+    data_handler.extract_covid_data()
+
+    covid_df = polars.read_csv(
+        data_handler.covid_data_file, dtypes=SOURCE_COVID_DATA_SCHEMA
+    )
+    data_handler.save_covid_data_as_parquet()
+    covid_parquet_df = polars.read_parquet(
+        data_handler.covid_data_file.with_suffix(".parquet")
+    )
+    assert covid_df.frame_equal(other=covid_parquet_df)
